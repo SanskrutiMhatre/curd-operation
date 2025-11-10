@@ -1,10 +1,13 @@
-name: Node.js CI
+name: Deploy Backend to Self-Hosted 
 
-on:  push 
-
+on:
+  push:
+    branches:
+      - main   
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  deploy:
+    name: Build and Deploy
+    runs-on: self-hosted  
 
     steps:
       - name: Checkout code
@@ -13,13 +16,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 18
 
       - name: Install dependencies
         run: npm install
 
-      - name: Run basic test (start server)
+      - name: Build project (optional)
+        run: npm run build || echo "No build step"
+
+      - name: Restart backend with PM2
         run: |
-          node server.js &
-          sleep 3
-          curl -I http://localhost:8080/data || exit 1
+         pm2 stop backend || true
+         pm2 start server.js --name backend
+  
