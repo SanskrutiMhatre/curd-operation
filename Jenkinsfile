@@ -22,7 +22,7 @@ pipeline {
             steps {
                 script {
                     echo '🐳 Building Docker image...'
-                    bat "docker build -t ${DOCKERHUB_USERNAME}/${IMAGE_NAME}:latest ."
+                    sh "docker build -t ${DOCKERHUB_USERNAME}/${IMAGE_NAME}:latest ."
                 }
             }
         }
@@ -32,8 +32,8 @@ pipeline {
                 script {
                     echo '📤 Pushing Docker image to Docker Hub...'
                     withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                        bat "echo $PASS | docker login -u $USER --password-stdin"
-                        bat "docker push ${DOCKERHUB_USERNAME}/${IMAGE_NAME}:latest"
+                        sh "echo $PASS | docker login -u $USER --password-stdin"
+                        sh "docker push ${DOCKERHUB_USERNAME}/${IMAGE_NAME}:latest"
                     }
                 }
             }
@@ -44,10 +44,10 @@ pipeline {
                 script {
                     echo '🚀 Deploying container...'
                     // Stop and remove existing container (if any)
-                    bat "docker rm -f ${CONTAINER_NAME} || true"
+                    sh "docker rm -f ${CONTAINER_NAME} || true"
 
                     // Run the new container
-                    bat "docker run -d -p 8081:5000 --name ${CONTAINER_NAME} ${DOCKERHUB_USERNAME}/${IMAGE_NAME}:latest"
+                    sh "docker run -d -p 8080:5000 --name ${CONTAINER_NAME} ${DOCKERHUB_USERNAME}/${IMAGE_NAME}:latest"
                 }
             }
         }
