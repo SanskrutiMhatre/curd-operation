@@ -2,11 +2,13 @@ pipeline {
     agent any
 
     environment {
-        // 👇 Replace these with your actual Docker Hub credentials & repo
-        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials-id'   // Jenkins credentials ID
+      
+        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials-id'   
         DOCKERHUB_USERNAME = 'sanskrutimhatre42'
         IMAGE_NAME = 'curd-operation'
         CONTAINER_NAME = 'curd-container'
+        HOST_PORT = '8081'  
+        CONTAINER_PORT = '5000' 
     }
 
     stages {
@@ -39,28 +41,30 @@ pipeline {
             }
         }
 
-       stage('Deploy Container') {
-    steps {
-        script {
-            echo '🚀 Deploying container...'
+        stage('Deploy Container') {
+            steps {
+                script {
+                    echo '🚀 Deploying container...'
 
-            // Stop and remove existing container (if any)
-            sh """
-                docker ps -q --filter "publish=8080" | xargs -r docker stop
-                docker rm -f ${CONTAINER_NAME} || true
-            """
+                     sh """
+                        echo '🧹 Cleaning old containers...'
+                        docker ps -q --filter "name=${CONTAINER_NAME}" | xargs -r docker stop
+                        docker rm -f ${CONTAINER_NAME} || true
+                    """
 
-            // Run the new container
-            sh "docker run -d -p 8080:5000 --name ${CONTAINER_NAME} ${DOCKERHUB_USERNAME}/${IMAGE_NAME}:latest"
+                  sh """
+                        echo '🆕 Starting new container on port ${HOST_PORT}...'
+                        docker run -d -p ${HOST_PORT}:${CONTAINER_PORT} --name ${CONTAINER_NAME} ${DOCKERHUB_USERNAME}/${IMAGE_NAME}:latest
+                    """
+                }
+            }
         }
-    }
-}
-
     }
 
     post {
         success {
             echo '✅ Deployment successful!'
+            echo "🌐 App running at: http://<your-server-ip>:${HOST_PORT}"
         }
         failure {
             echo '❌ Deployment failed!'
